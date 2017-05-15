@@ -1,0 +1,11 @@
+version: '2'
+services:
+  rubyonrails:
+    build: .
+    container_name: rubyonrails
+    ports:
+     - "13001:3000"
+     - "23001:22"
+    network_mode: "bridge"
+    external_links:
+     - mysql

@@ -1,0 +1,17 @@
+version: '2'
+services:
+  php-apache:
+    build: .
+    ports:
+     - "10080:80"
+     - "20080:22"
+    volumes:
+     - ./data/:/code
+    external_links:
+     - mysql_1
+
+  mysql:
+     build: ../mysql/
+#    extends:
+#       file: ../common-services.yml
+#       service: mysql  

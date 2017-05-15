@@ -1,0 +1,7 @@
+version: '2'
+services:
+   mysql:
+    build: ./mysql/
+    ports:
+     - "21001:22"
+     - "11001:3306"

@@ -1,0 +1,13 @@
+version: '2'
+services:
+  php-apache:
+    build: .
+    container_name: php-apache
+    ports:
+     - "10080:80"
+     - "20080:22"
+    volumes:
+     - ./data/:/code
+    network_mode: "bridge"
+    external_links:
+     - mysql

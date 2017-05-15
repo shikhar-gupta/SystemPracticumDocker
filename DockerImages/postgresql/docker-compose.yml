@@ -1,0 +1,9 @@
+version: '2'
+services:
+  postgresql:
+    build: .
+    container_name: postgresql
+    ports:
+     - "15432:5432"
+     - "25432:22"
+    network_mode: "bridge"

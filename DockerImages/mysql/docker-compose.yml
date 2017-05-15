@@ -1,0 +1,9 @@
+version: '2'
+services:
+  mysql:
+    build: .
+    container_name: mysql
+    ports:
+     - "21001:22"
+     - "11001:3306"
+    network_mode: "bridge"

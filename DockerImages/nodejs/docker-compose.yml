@@ -1,0 +1,13 @@
+version: '2'
+services:
+  nodejs:
+    build: .
+    container_name: nodejs
+    ports:
+     - "13000:3000"
+     - "23000:22"
+    volumes:
+     - ./data/:/home
+    network_mode: "bridge"
+    external_links:
+     - mysql
