@@ -8,7 +8,7 @@ import threading
 period = 10
 
 def reload():
-	threading.Timer(period, reload).start()
+	threading.Timer(10, reload).start()
 	table = {}
 	now = datetime.now()
 	for line in reversed(list(open("/home/stweb/logs/access.log"))):
@@ -23,8 +23,8 @@ def reload():
 			time = datetime.strptime(time,'%d/%b/%Y:%H:%M:%S %z')
 			time = time.replace(tzinfo=None)
 			record = record[match.end():]
-		#if((now -time).total_seconds() >period):
-			#break 
+		if((now -time).total_seconds() >period):
+			break 
 		response = record[2:5]
 		record = record[5:]
 		start = 0
@@ -60,43 +60,47 @@ def reload():
 		print()
 
 	current = {}
-	for line in open('nginx.conf','r'):
+	for line in open('/etc/nginx/nginx.conf','r'):
 		match = re.match('(.*)limit_req_zone \$binary_remote_addr zone=(.*):(.*) rate=(.*)r/s;',line)
 		if match:
-			print(match.group(2),match.group(4))
+			# print(match.group(2),match.group(4))
 			current[match.group(2)] = int(match.group(4))
 
-	resources = 100 * len(current)
 	updated = {}
 	heap = []
+	# print(current)
 	for key in current:
-		current[key] = 100
-		updated[key] = 100
-		print (key, table[key]['2xx'], table[key]['5xx'])
+		current[key] = 1000
+		updated[key] = 1000
+		if not key in table:
+			table[key]={'2xx':0,'3xx':0,'4xx':0,'5xx':0,'byte':0}
+		# print (key, table[key]['2xx'], table[key]['5xx'])
 		if table[key]['5xx'] > 0:
-			heappush(heap, (table[key]['5xx'], key))
+			heappush(heap, (-table[key]['5xx'], key))
 
 	margin = 5
-
+	# print(heap)
 	for key in current:
 		if len(heap) == 0:
 			break
-		if current[key] - table[key]['2xx'] - margin > 0:
+		if current[key] - table[key]['2xx'] - margin > 0 and len(heap) > 0:
 			excess = current[key] - table[key]['2xx'] - margin
 			x = heappop(heap)
 			need = -x[0]
-			while excess > need and len(heap) > 0:
+			while excess >= need:
 				excess = excess - need
 				updated[x[1]] = updated[x[1]] + need
 				updated[key] = updated[key] - need
+				if len(heap) == 0 or excess == 0:
+					break
 				x = heappop(heap)
 				need = -x[0]
-			if len(heap) > 0:
+			if len(heap) == 0 or excess == 0:
 				break
 			tmp = -x[0] - excess
 			updated[x[1]] = updated[x[1]] + excess
 			updated[key] = updated[key] - excess
-			heappush(heap, (-tmp, x[0]))
+			heappush(heap, (-tmp, x[1]))
 
 	for key in updated:
 		print (key, updated[key])
@@ -104,7 +108,7 @@ def reload():
 	for key in updated:
 		updated[key] = str((updated[key]))
 	#Change nginx file path here
-	with fileinput.FileInput('nginx.conf', inplace=True) as file:
+	with fileinput.FileInput('/etc/nginx/nginx.conf', inplace=True) as file:
 		for line in file:
 			match = re.match('(.*)limit_req_zone \$binary_remote_addr zone=(.*):(.*) rate=(.*);',line)
 			if match:
